@@ -2,7 +2,8 @@ import copy
 import random
 
 POCET_JEDINCOV=10
-GENERACIA=10
+global GENERACIA
+
 
 class Jedinec():
 
@@ -418,9 +419,143 @@ def print_matica(matica):
 
 
 
+
+def first_generacia(prazdna_matica,x_velkost,y_velkost,pocet_kamenov):
+    list = []
+    matica = copy.deepcopy(prazdna_matica)
+    for i in range(50):
+        copy_of_matica = copy.deepcopy(matica)
+        gen = create_gens(x_velkost, y_velkost, pocet_kamenov)
+        jedinec = Jedinec(copy_of_matica)
+        jedinec.set_gen(gen)
+        jedinec.set_velkost_matice(x_velkost, y_velkost)
+        pokus(jedinec)
+        list.append(jedinec)
+
+    for i in range(len(list)):
+        if list[i].fitnes == x_velkost * y_velkost - pocet_kamenov:
+            print("Výsledné riešenie je : ")
+            print_matica(list[i].matica)
+            print(list[i].gen)
+            print("jedinec pochádza z " + str(0) + " generácie")
+            return True
+    return list
+
+
+def mutuj(jedinec):
+    list = []
+    prvy = random.choice(jedinec.gen)
+    druhy = random.choice(jedinec.gen)
+    while druhy == prvy:
+        druhy = random.choice(jedinec.gen)
+
+    prvy_index = jedinec.gen.index(prvy)
+    druhy_index = jedinec.gen.index(druhy)
+    jedinec.gen[prvy_index] = druhy
+    jedinec.gen[druhy_index] = prvy
+    new_gen = copy.deepcopy(jedinec.gen)
+    return new_gen
+
+
+def krizenie(jedinec1,jedinec2):
+    gen1 = jedinec1.gen
+    gen2 = jedinec2.gen
+    i=0
+    for gen in gen1:
+        nahoda = random.randint(0,1)
+        if nahoda == 1:
+            if (gen2[i] in gen1):
+                continue
+            else:
+                gen1[i] = gen2[i]
+
+        i = i + 1
+
+    return gen1
+
+
+def new_generation(list,matica, x_velkost, y_velkost, pocet_kamenov,):
+
+
+    list.sort(key=lambda x: x.fitnes, reverse=True)  # v danej generácií sa nenašlo riešenie , zoraď všetkých jedincov od najväčšej fitnes po najmenjšiu
+    new_list = []
+    #Mutácia 50% najhorších jedincov
+    dlzka = int(len(list)/2)
+    for i in range(dlzka):
+        gen = mutuj(list[i+dlzka])
+        copy_of_matica = copy.deepcopy(matica)
+        jedinec = Jedinec(copy_of_matica)
+        jedinec.set_gen(gen)
+        jedinec.set_velkost_matice(x_velkost, y_velkost)
+        pokus(jedinec)
+        new_list.append(jedinec)
+
+    dlzka = int(len(list))
+    for i in range(int(len(list)/2)):
+        gen = krizenie(list[i],list[dlzka-i-1])
+        copy_of_matica = copy.deepcopy(matica)
+        jedinec = Jedinec(copy_of_matica)
+        jedinec.set_gen(gen)
+        jedinec.set_velkost_matice(x_velkost, y_velkost)
+        pokus(jedinec)
+        new_list.append(jedinec)
+    return new_list
+
+
+
+def start_algo(matica, x_velkost, y_velkost, pocet_kamenov):
+
+    generation_count = 1
+
+    list = first_generacia(matica, x_velkost, y_velkost, pocet_kamenov)
+    if (list != True) :
+        while (generation_count != 500):
+            list = new_generation(list,matica, x_velkost, y_velkost, pocet_kamenov)
+            for i in range(len(list)):
+                if list[i].fitnes == x_velkost * y_velkost - pocet_kamenov:
+                    nn = copy.deepcopy(list)
+                    nn.sort(key=lambda x: x.fitnes, reverse=True)
+                    print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[49].fitnes))
+                    print("Výsledné riešenie je : ")
+                    print_matica(list[i].matica)
+                    print(list[i].gen)
+                    print("jedinec pochádza z " + str(generation_count) + " generácie")
+
+                    return True
+
+            nn = copy.deepcopy(list)
+            nn.sort(key=lambda x: x.fitnes, reverse=True)
+            print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[49].fitnes))
+            generation_count = generation_count + 1
+
+        maximum = list[0].fitnes
+        bigone = list[0]
+        for i in range(len(list)):
+            if list[i].fitnes > maximum:
+                bigone = list[i]
+                maximum = list[i].fitnes
+
+        print(maximum)
+        print_matica(bigone.matica)
+        print(bigone.gen)
+        print(bigone.good)
+        print("jedinec pochádza z " + str(generation_count) + " generácie")
+
+        print("koniec")
+
+
+
+
+
+
+
+    return False
+
+
+
 def main():
     buffer = []
-
+    GENERACIA = 1
     vstup = open("vstup.txt", "r")
     for riadok in vstup:
         buffer.append(riadok.strip())
@@ -431,36 +566,9 @@ def main():
     matica = create_table(buffer,x_velkost,y_velkost)
 
 
-    list = []
+    start_algo(matica,x_velkost,y_velkost,pocet_kamenov)
 
-    for i in range(50):
-        copy_of_matica = copy.deepcopy(matica)
-        gen = create_gens(x_velkost, y_velkost, pocet_kamenov)
-        jedinec = Jedinec(copy_of_matica)
-        jedinec.set_gen(gen)
-        jedinec.set_velkost_matice(x_velkost, y_velkost)
-        pokus(jedinec)
-        list.append(jedinec)
 
-    maximum = list[0].fitnes
-    bigone = list[0]
-    for i in range(len(list)):
-        if list[i].fitnes > maximum:
-            bigone = list[i]
-            maximum = list[i].fitnes
-        if list[i].fitnes == x_velkost*y_velkost - pocet_kamenov:
-            print("Výsledné riešenie je : ")
-            print_matica(list[i].matica)
-            print(list[i].gen)
-
-            break
-
-    list.sort(key=lambda x:x.fitnes,reverse=True)
-
-    print(maximum)
-    print_matica(bigone.matica)
-    print(bigone.gen)
-    print(bigone.good)
 
 
 

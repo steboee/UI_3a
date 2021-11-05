@@ -423,7 +423,7 @@ def print_matica(matica):
 def first_generacia(prazdna_matica,x_velkost,y_velkost,pocet_kamenov):
     list = []
     matica = copy.deepcopy(prazdna_matica)
-    for i in range(50):
+    for i in range(100):
         copy_of_matica = copy.deepcopy(matica)
         gen = create_gens(x_velkost, y_velkost, pocet_kamenov)
         jedinec = Jedinec(copy_of_matica)
@@ -454,6 +454,7 @@ def mutuj(jedinec):
     jedinec.gen[prvy_index] = druhy
     jedinec.gen[druhy_index] = prvy
     new_gen = copy.deepcopy(jedinec.gen)
+    random.shuffle(new_gen)
     return new_gen
 
 
@@ -461,17 +462,25 @@ def krizenie(jedinec1,jedinec2):
     gen1 = jedinec1.gen
     gen2 = jedinec2.gen
     i=0
-    for gen in gen1:
-        nahoda = random.randint(0,1)
-        if nahoda == 1:
-            if (gen2[i] in gen1):
-                continue
+    gen = []
+    dlzka = int(len(gen1))
+    a = random.randint(0,1)
+    if (a==0):
+        for i in range(dlzka):
+            if (i < int(dlzka / 2)):
+                gen.append(gen1[i])
             else:
-                gen1[i] = gen2[i]
+                gen.append(gen2[i])
+    elif (a==1):
+        for i in range(dlzka):
+            if (i < int(dlzka / 2)):
+                gen.append(gen2[i])
+            else:
+                gen.append(gen1[i])
 
-        i = i + 1
+    return gen
 
-    return gen1
+
 
 
 def new_generation(list,matica, x_velkost, y_velkost, pocet_kamenov,):
@@ -500,7 +509,10 @@ def new_generation(list,matica, x_velkost, y_velkost, pocet_kamenov,):
         pokus(jedinec)
         new_list.append(jedinec)
     return new_list
-
+    new = []
+    for i in range(100):
+        new.append(new_list[i])
+    return new
 
 
 def start_algo(matica, x_velkost, y_velkost, pocet_kamenov):
@@ -509,7 +521,7 @@ def start_algo(matica, x_velkost, y_velkost, pocet_kamenov):
 
     list = first_generacia(matica, x_velkost, y_velkost, pocet_kamenov)
     if (list != True) :
-        while (generation_count != 500):
+        while (generation_count != 100):
             list = new_generation(list,matica, x_velkost, y_velkost, pocet_kamenov)
             for i in range(len(list)):
                 if list[i].fitnes == x_velkost * y_velkost - pocet_kamenov:
@@ -522,6 +534,7 @@ def start_algo(matica, x_velkost, y_velkost, pocet_kamenov):
                     print("jedinec pochádza z " + str(generation_count) + " generácie")
 
                     return True
+
 
             nn = copy.deepcopy(list)
             nn.sort(key=lambda x: x.fitnes, reverse=True)

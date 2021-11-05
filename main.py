@@ -12,6 +12,7 @@ global GENERACIA
 
 
 
+
 class Jedinec():
 
     def __init__(self,matica, fitnes=0):

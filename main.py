@@ -484,30 +484,11 @@ def mutuj(gen,jedinec):
         x = random.choice(mutation_rate)
         if (x == 1):
             mutated = random.choice(choices)
+
             zmutovany[i] = mutated
     return zmutovany
 
 
-    """  
-    prvy = random.choice(gen)
-    druhy = random.choice(gen)
-    while druhy == prvy:
-        druhy = random.choice(gen)
-
-    prvy_index = gen.index(prvy)
-    druhy_index = gen.index(druhy)
-    
-    while first in zmutovany:
-        first = random.choice(choices)
-    zmutovany[prvy_index] = first
-    second = random.choice(choices)
-    while second in zmutovany:
-        second = random.choice(choices)
-
-    zmutovany[druhy_index] = second
-
-    return zmutovany
-    """
 
 #funkcia skríži 2 jedincov
 def krizenie(jedinec1,jedinec2):
@@ -583,7 +564,7 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
         if OPTION == 1:             # výber Ruletou (proporciálne)
             parent1 = random.choice(new_list)
             parent2 = random.choice(new_list)
-            while (parent2.gen == parent1.gen):
+            while (parent2 == parent1):
                 parent2 = random.choice(new_list)
             copy_of_matica = copy.deepcopy(matica)
             jedinec = Jedinec(copy_of_matica)
@@ -598,17 +579,12 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
             generation_new.append(jedinec)
 
         elif OPTION == 0:
-            pocet_najlepsich = int(POCET_JEDINCOV/10)   # do novej generácie sa dostane 50% najlepších (bez zmeny)
-            if i == pocet_najlepsich:
-                copied = copy.deepcopy(list)
-                copied.sort(key=lambda x: x.fitnes, reverse=True)
-                copied = copied[pocet_najlepsich:]
-                new_list = weight(copied)
+            pocet_najlepsich = POCET_JEDINCOV/10   # do novej generácie sa dostane 50% najlepších (bez zmeny)
             if i > pocet_najlepsich:
-
+                new_list = weight(list)
                 parent1 = random.choice(new_list)
                 parent2 = random.choice(new_list)
-                while (parent2.gen == parent1.gen):
+                while (parent2 == parent1):
                     parent2 = random.choice(new_list)
                 copy_of_matica = copy.deepcopy(matica)
                 jedinec = Jedinec(copy_of_matica)
@@ -628,7 +604,7 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
         elif OPTION ==2:
             parent1 = tournament(new_list)
             parent2 = tournament(new_list)
-            while parent2.gen == parent1.gen:
+            while parent2 == parent1:
                 parent2 = tournament(new_list)
             copy_of_matica = copy.deepcopy(matica)
             jedinec = Jedinec(copy_of_matica)

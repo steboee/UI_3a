@@ -1,10 +1,12 @@
 import copy
 import random
+import time
 
 POCET_JEDINCOV=10
-POCET_GENERACII=500
+POCET_GENERACII=150
 TOURNAMENT_SIZE=0
 MUTATION_RATE=0
+ELITISM=1
 global GENERACIA
 OPTION=0
 
@@ -449,11 +451,11 @@ def first_generacia(prazdna_matica,x_velkost,y_velkost,pocet_kamenov):
         list.append(jedinec)
 
     for i in range(len(list)):
-        if list[i].fitnes == pow(x_velkost * y_velkost - pocet_kamenov,3):
-            print("Výsledné riešenie je : ")
-            print_matica(list[i].matica)
-            print(list[i].gen)
-            print("jedinec pochádza z " + str(0) + " generácie")
+        if list[i].fitnes == x_velkost * y_velkost - pocet_kamenov:
+            #print("Výsledné riešenie je : ")
+            #print_matica(list[i].matica)
+            #print(list[i].gen)
+            #print("jedinec pochádza z " + str(0) + " generácie")
             return True
 
     nn = copy.deepcopy(list)
@@ -462,7 +464,7 @@ def first_generacia(prazdna_matica,x_velkost,y_velkost,pocet_kamenov):
     for jedinec in nn:
         sum = sum + jedinec.fitnes
     avg = sum / POCET_JEDINCOV
-    print("GENERATION " + str(0) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes) + "  AVG:  " + str(avg))
+    #print("GENERATION " + str(0) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes) + "  AVG:  " + str(avg))
     return list
 
 
@@ -484,7 +486,10 @@ def mutuj(gen,jedinec):
         x = random.choice(mutation_rate)
         if (x == 1):
             mutated = random.choice(choices)
-
+            if mutated in zmutovany:
+                index = zmutovany.index(mutated)
+                zmutovany[i] = mutated
+                zmutovany[index] = random.choice(choices)
             zmutovany[i] = mutated
     return zmutovany
 
@@ -497,12 +502,13 @@ def krizenie(jedinec1,jedinec2):
     i=0
     newgen = []
     dlzka = len(gen1)
+    randomizer = (1,0)
     for i in range(dlzka):
-        if (i < int(dlzka/2)):
+        x = random.choice(randomizer)
+        if x==1:
             newgen.append(gen1[i])
-        else:
+        elif x==0:
             newgen.append(gen2[i])
-
 
     return newgen
 
@@ -558,64 +564,77 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
         new_list = copy.deepcopy(list)
 
     generation_new = []
+    all_gens = []
 
     for i in range(POCET_JEDINCOV):
         novy_gen = []
         if OPTION == 1:             # výber Ruletou (proporciálne)
             parent1 = random.choice(new_list)
             parent2 = random.choice(new_list)
-            while (parent2 == parent1):
+            while (parent2.gen == parent1.gen):
                 parent2 = random.choice(new_list)
             copy_of_matica = copy.deepcopy(matica)
             jedinec = Jedinec(copy_of_matica)
             jedinec.set_velkost_matice(x_velkost, y_velkost)
             novy_gen = krizenie(parent1, parent2)
-            novy_gen = mutuj(novy_gen,jedinec)
+            while novy_gen in all_gens:
+                novy_gen = mutuj(novy_gen, jedinec)
+
 
             jedinec.set_gen(novy_gen)
 
             pokus(jedinec)  # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
             jedinec.update_fitness()
+            one_gen = copy.deepcopy(novy_gen)
+            all_gens.append(one_gen)
             generation_new.append(jedinec)
 
         elif OPTION == 0:
-            pocet_najlepsich = POCET_JEDINCOV/10   # do novej generácie sa dostane 50% najlepších (bez zmeny)
-            if i > pocet_najlepsich:
+            pocet_najlepsich = POCET_JEDINCOV/10 * ELITISM   # do novej generácie sa dostane 10% najlepších (bez zmeny)
+            if i == pocet_najlepsich:
                 new_list = weight(list)
+            if i >= pocet_najlepsich:
                 parent1 = random.choice(new_list)
                 parent2 = random.choice(new_list)
-                while (parent2 == parent1):
+                while (parent2.gen == parent1.gen):
                     parent2 = random.choice(new_list)
                 copy_of_matica = copy.deepcopy(matica)
                 jedinec = Jedinec(copy_of_matica)
                 jedinec.set_velkost_matice(x_velkost, y_velkost)
                 novy_gen = krizenie(parent1, parent2)
-                novy_gen = mutuj(novy_gen,jedinec)
+                while novy_gen in all_gens:
+                    novy_gen = mutuj(novy_gen, jedinec)
 
                 jedinec.set_gen(novy_gen)
-
                 pokus(jedinec)  # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
                 jedinec.update_fitness()
+                one_gen = copy.deepcopy(novy_gen)
+                all_gens.append(one_gen)
                 generation_new.append(jedinec)
 
             else:
+                one_gen = copy.deepcopy(new_list[i].gen)
                 generation_new.append(new_list[i])
+                all_gens.append(one_gen)
 
         elif OPTION ==2:
             parent1 = tournament(new_list)
             parent2 = tournament(new_list)
-            while parent2 == parent1:
+            while parent2.gen == parent1.gen:
                 parent2 = tournament(new_list)
             copy_of_matica = copy.deepcopy(matica)
             jedinec = Jedinec(copy_of_matica)
             jedinec.set_velkost_matice(x_velkost, y_velkost)
             novy_gen = krizenie(parent1, parent2)
-            novy_gen = mutuj(novy_gen, jedinec)
+            while novy_gen in all_gens:
+                novy_gen = mutuj(novy_gen, jedinec)
 
             jedinec.set_gen(novy_gen)
 
             pokus(jedinec)  # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
             jedinec.update_fitness()
+            one_gen = copy.deepcopy(novy_gen)
+            all_gens.append(one_gen)
             generation_new.append(jedinec)
 
 
@@ -641,51 +660,43 @@ def start_algo(matica, x_velkost, y_velkost, pocet_kamenov,OPTION):
             for i in range(len(list)):
                 list[i].set_generation(generation_count)
                 if list[i].fitnes == x_velkost * y_velkost - pocet_kamenov:
-                    nn = copy.deepcopy(list)
-                    nn.sort(key=lambda x: x.fitnes, reverse=True)
-                    sum = 0
-                    for jedinec in nn:
-                        sum = sum + jedinec.fitnes
-                    avg = sum / POCET_JEDINCOV
-                    print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)+ "  AVG:  " + str(avg))
-                    print("Výsledné riešenie je : ")
-                    print("")
-                    print("FITNES: " + str(list[i].fitnes))
-                    print_matica(list[i].matica)
-                    print(list[i].gen)
-                    print("jedinec pochádza z " + str(generation_count) + " generácie")
+                    #nn = copy.deepcopy(list)
+                    #nn.sort(key=lambda x: x.fitnes, reverse=True)
+                    #sum = 0
+                    #for jedinec in nn:
+                        #sum = sum + jedinec.fitnes
+                    #avg = sum / POCET_JEDINCOV
+                    #print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)+ "  AVG:  " + str(avg))
+                    #print("Výsledné riešenie je : ")
+                    #print("")
+                    #print("FITNES: " + str(list[i].fitnes))
+                    #print_matica(list[i].matica)
+                    #print(list[i].gen)
+                    #print("jedinec pochádza z " + str(generation_count) + " generácie")
 
-                    return True
+                    return generation_count
                 elif (list[i].fitnes > BEST.fitnes):
                     BEST = list[i]
 
-            nn = copy.deepcopy(list)
-            nn.sort(key=lambda x: x.fitnes, reverse=True)
-            sum = 0
-            for jedinec in nn:
-                sum = sum+jedinec.fitnes
-            avg=sum/POCET_JEDINCOV
-            print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)  + "  AVG:  " + str(avg))
+            #nn = copy.deepcopy(list)
+            #nn.sort(key=lambda x: x.fitnes, reverse=True)
+            #sum = 0
+            #for jedinec in nn:
+               # sum = sum+jedinec.fitnes
+            #avg=sum/POCET_JEDINCOV
+            #print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)  + "  AVG:  " + str(avg))
             generation_count = generation_count + 1
 
 
-        print("\nNajlepšie dosiahnuté riešenie je :")
-        print("")
-        print("FITNES: " + str(BEST.fitnes))
-        print_matica(BEST.matica)
-        print(BEST.gen)
+       # print("\nNajlepšie dosiahnuté riešenie je :")
+        #print("")
+        #print("FITNES: " + str(BEST.fitnes))
+        #print_matica(BEST.matica)
+       # print(BEST.gen)
 
-        print("jedinec pochádza z " + str(BEST.generation) + " generácie")
+       # print("jedinec pochádza z " + str(BEST.generation) + " generácie")
 
-
-
-
-
-
-
-
-
-    return False
+    return 0
 
 
 
@@ -695,6 +706,7 @@ def main():
     global OPTION
     global TOURNAMENT_SIZE
     global MUTATION_RATE
+    global ELITISM
     buffer = []
     GENERACIA = 1
     vstup = open("vstup.txt", "r")
@@ -713,12 +725,210 @@ def main():
     print("počet riadkov = 10")
     print("počet stĺpcov = 12")
     print("MENU_1: ")
-    print("POCET JEDINCOV: ")
-    POCET_JEDINCOV = int(input())
-    print("MAXIMALNY POČET GENERÁCIÍ: ")
-    POCET_GENERACII = int(input())
-    print("Pravdepodobnosť mutácie génu: (1 = 1%, 100 = 100%")
-    MUTATION_RATE = int(input())
+    print("")
+    #print("POCET JEDINCOV: ")
+    #POCET_JEDINCOV = int(input())
+    #print("MAXIMALNY POČET GENERÁCIÍ: ")
+    #POCET_GENERACII = int(input())
+    #print("Pravdepodobnosť mutácie génu: (1 = 1%, 100 = 100%")
+    #MUTATION_RATE = int(input())
+
+
+
+
+    for k in range(5):
+        if k == 0 :
+            MUTATION_RATE = 1
+        elif k == 1:
+            MUTATION_RATE = 3
+        elif k==2:
+            MUTATION_RATE = 5
+        elif k==3:
+            MUTATION_RATE = 10
+        elif k ==4:
+            MUTATION_RATE = 20
+        POCET_JEDINCOV = 10
+        POCET_GENERACII = 500
+        ELITISM=1
+        OPTION = 0
+        total_time = 0
+        total_count = 0
+        x=100
+        for i in range(100):
+            t = time.process_time()
+            count = start_algo(matica, x_velkost, y_velkost, pocet_kamenov, OPTION)
+            if count == 0:
+                x=x-1
+
+            else:
+                total_count = total_count + count
+                elapsed_time = time.process_time() - t
+                total_time = total_time + elapsed_time
+
+
+            #print("TIME: " + str(elapsed_time))
+
+        print("POCET JEDINCOV=100\nPOCET GENERACII=100\nMUTATION_RATE="+str(MUTATION_RATE)+"\nELITISM=1")
+        total_time = total_time / x
+        total_count = total_count / x
+        print("OPTION-0")
+        print("TOTAL AVG TIME : " + str(total_time))
+        print("TOTAL AVG generation : " + str(total_count))
+        print(x)
+        print("")
+
+    for k in range(5):
+        if k == 0:
+            MUTATION_RATE = 1
+        elif k == 1:
+            MUTATION_RATE = 3
+        elif k == 2:
+            MUTATION_RATE = 5
+        elif k == 3:
+            MUTATION_RATE = 10
+        elif k == 4:
+            MUTATION_RATE = 20
+        POCET_JEDINCOV = 10
+        POCET_GENERACII = 500
+        ELITISM = 3
+        OPTION = 0
+        total_time = 0
+        total_count = 0
+        x=100
+        for i in range(100):
+            t = time.process_time()
+            count = start_algo(matica, x_velkost, y_velkost, pocet_kamenov, OPTION)
+            if count == 0:
+                x = x - 1
+
+            else:
+                total_count = total_count + count
+                elapsed_time = time.process_time() - t
+                total_time = total_time + elapsed_time
+
+
+        print("POCET JEDINCOV=100\nPOCET GENERACII=100\nMUTATION_RATE="+str(MUTATION_RATE)+"\nELITISM=3")
+        total_time = total_time / x
+        total_count = total_count / x
+        print("OPTION-0")
+        print("TOTAL AVG TIME : " + str(total_time))
+        print("TOTAL AVG generation : " + str(total_count))
+        print(x)
+        print("")
+
+    for k in range(5):
+        if k == 0:
+            MUTATION_RATE = 1
+        elif k == 1:
+            MUTATION_RATE = 3
+        elif k == 2:
+            MUTATION_RATE = 5
+        elif k == 3:
+            MUTATION_RATE = 10
+        elif k == 4:
+            MUTATION_RATE = 20
+        POCET_JEDINCOV = 10
+        POCET_GENERACII = 500
+        ELITISM = 5
+        OPTION = 0
+        total_time = 0
+        total_count = 0
+        x=100
+        for i in range(100):
+            t = time.process_time()
+            count = start_algo(matica, x_velkost, y_velkost, pocet_kamenov, OPTION)
+            if count == 0:
+                x=x-1
+
+            else:
+                total_count = total_count + count
+                elapsed_time = time.process_time() - t
+                total_time = total_time + elapsed_time
+
+            # print("TIME: " + str(elapsed_time))
+
+        print("POCET JEDINCOV=100\nPOCET GENERACII=100\nMUTATION_RATE="+str(MUTATION_RATE)+"\nELITISM=5")
+        total_time = total_time / x
+        total_count = total_count / x
+        print("OPTION-0")
+        print("TOTAL AVG TIME : " + str(total_time))
+        print("TOTAL AVG generation : " + str(total_count))
+        print(x)
+        print("")
+
+    for k in range(5):
+        if k == 0:
+            MUTATION_RATE = 1
+        elif k == 1:
+            MUTATION_RATE = 3
+        elif k == 2:
+            MUTATION_RATE = 5
+        elif k == 3:
+            MUTATION_RATE = 10
+        elif k == 4:
+            MUTATION_RATE = 20
+        POCET_JEDINCOV = 10
+        POCET_GENERACII = 500
+        OPTION = 1
+        total_time = 0
+        total_count = 0
+        x=100
+        for i in range(100):
+            t = time.process_time()
+            count = start_algo(matica, x_velkost, y_velkost, pocet_kamenov, OPTION)
+            if count == 0:
+                x=x-1
+
+            else:
+                total_count = total_count + count
+                elapsed_time = time.process_time() - t
+                total_time = total_time + elapsed_time
+
+            # print("TIME: " + str(elapsed_time))
+
+        print("POCET JEDINCOV=100\nPOCET GENERACII=100\nMUTATION_RATE="+str(MUTATION_RATE))
+        total_time = total_time / x
+        total_count = total_count / x
+        print("OPTION-1")
+        print("TOTAL AVG TIME : " + str(total_time))
+        print("TOTAL AVG generation : " + str(total_count))
+        print(x)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    """
+    OPTION = 2
+    TOURNAMENT_SIZE = 3
+    total_time = 0
+    total_count = 0
+    for i in range(50):
+        t = time.process_time()
+        count = start_algo(matica, x_velkost, y_velkost, pocet_kamenov, OPTION)
+        total_count = total_count + count
+        elapsed_time = time.process_time() - t
+        total_time = total_time + elapsed_time
+        print("TIME: " + str(elapsed_time))
+
+    total_time = total_time / 50
+    total_count = total_count / 50
+    print("OPTION-2")
+    print("TOTAL AVG TIME : " + str(total_time))
+    print("TOTAL AVG generation : " + str(total_count))
+   
+
+
     print("MENU_2")
     print("0 -> Výber jedincov na základe elity (prvých 10%) ostatných 90% sa vytvorí výberom selekciou všetkých jedincov a následným križenim, mutáciou")
     print("1 -> Výber jedincov na základe rulety")
@@ -730,7 +940,7 @@ def main():
         TOURNAMENT_SIZE = int(input())
 
     start_algo(matica,x_velkost,y_velkost,pocet_kamenov,OPTION)
-
+    """
 
 
 

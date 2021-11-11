@@ -12,10 +12,6 @@ OPTION=0
 
 
 
-
-
-
-
 class Jedinec():
     def __init__(self,matica, fitnes=0):
         self.fitnes = fitnes
@@ -46,7 +42,6 @@ class Jedinec():
 
     def set_generation(self,generation):
         self.generation = generation
-
 
 
 # pohyb zena dole
@@ -375,9 +370,6 @@ def vynuluj_gen(gen,jedinec,poradie):
 
 
 
-
-
-
 # funkcia ktorá vytvorí náhodný chromozom pre jedinca
 def create_gens(x,y,k):
     max_gens = (x+y)+k
@@ -488,7 +480,6 @@ def mutuj(chromozom,jedinec):
             mutated = random.choice(choices)
             zmutovany[i] = mutated
     return zmutovany
-
 
 
 #funkcia skríži 2 jedincov
@@ -627,6 +618,7 @@ def start_algo(matica, x_velkost, y_velkost, pocet_kamenov,OPTION,moznost):
                         print("")
                         print("FITNES: " + str(list[i].fitnes))
                         print_matica(list[i].matica)
+                        print("\nChromozóm jedinca: ")
                         print(list[i].chromozom)
                         print("jedinec pochádza z " + str(generation_count) + " generácie")
 
@@ -689,7 +681,6 @@ def tester(opakovanie,OPTION,matica,x_velkost,y_velkost,pocet_kamenov):
     print("")
 
 
-
 def main():
     global POCET_JEDINCOV
     global POCET_GENERACII
@@ -708,7 +699,7 @@ def main():
     pocet_kamenov = len(buffer)-2
 
     matica = create_table(buffer,x_velkost,y_velkost)
-    print_matica(matica)
+
 
     print("###########################################################")
     print("Problém - Zenova záhrada")
@@ -723,20 +714,20 @@ def main():
     moznost = int(input())
 
 
-    print("POCET JEDINCOV: ")
+    print("POČET JEDINCOV V 1 GENERÁCIÍ: ")
     POCET_JEDINCOV = int(input())
     print("MAXIMALNY POČET GENERÁCIÍ: ")
     POCET_GENERACII = int(input())
-    print("Pravdepodobnosť mutácie génu: (1 = 1%, 100 = 100%")
+    print("Pravdepodobnosť mutácie génu: (1 = 1%, 100 = 100%)")
     MUTATION_RATE = int(input())
 
     print("MENU_2")
-    print("0 -> Výber jedincov na základe elity (prvých 10%) ostatných 90% sa vytvorí výberom selekciou všetkých jedincov a následným križenim, mutáciou")
+    print("0 -> Výber jedincov na základe elitárstva ")
     print("1 -> Výber jedincov na základe rulety")
     print("Váš výber: ")
     OPTION = int(input())
     if OPTION ==0:
-        print("ELITISM mnoŽstvo vyvolených : (1=10% 10=100%)")
+        print("ELITISM mnoŽstvo vyvolených : (1 = 10%    10 = 100%)")
         ELITISM = int(input())
 
     if (moznost == 0):

@@ -2,11 +2,10 @@ import copy
 import random
 import time
 
-POCET_JEDINCOV=10
-POCET_GENERACII=150
-TOURNAMENT_SIZE=0
+POCET_JEDINCOV=0
+POCET_GENERACII=0
 MUTATION_RATE=0
-ELITISM=1
+ELITISM=0
 global GENERACIA
 OPTION=0
 
@@ -18,10 +17,9 @@ OPTION=0
 
 
 class Jedinec():
-
     def __init__(self,matica, fitnes=0):
         self.fitnes = fitnes
-        self.gen = []
+        self.chromozom = []
         self.matica = matica
         self.poradie = 1
         self.good = True
@@ -33,8 +31,8 @@ class Jedinec():
     def up_fitness(self):
         self.fitnes = self.fitnes + 1
 
-    def set_gen(self,gen):
-        self.gen = gen
+    def set_chromozom(self, chromozom):
+        self.chromozom = chromozom
 
     def set_velkost_matice(self,x,y):
         self.matica_x = x
@@ -289,56 +287,58 @@ def zen_right(jedinec, x,y,poradie,cislo):
 
     return True
 
-# pokus o pohrabanie zahrady ( vyskúšanie génu a vypočítanie fitnes)
+# pokus o pohrabanie zahrady (vyskúšanie génu a vypočítanie fitnes)
 def pokus(jedinec):
     global check
-    for gen in jedinec.gen:
+    for gen in jedinec.chromozom:
         #print("gen: " + str(gen) + "\n")
-        if (0 <= gen  and gen < jedinec.matica_y):
+        if (0 <= gen  and gen < jedinec.matica_y):              # gen je taký , že pohyb jedinca bude smerom dole
             check = zen_down(jedinec,0,gen,jedinec.poradie,0)
-            if (check == False):
+            if (check == False):                                            # ak daný gén nebol úspešný a jedinec sa zasekol
                 #print("Jedinec to nezvladol")
-                vynuluj_gen(gen,jedinec,jedinec.poradie)
+                vynuluj_gen(gen,jedinec,jedinec.poradie)                    # treba vynulovať jeho posledný gén ktorým vstúpil na záhradku
                 jedinec.set_bad()
                 break
 
-        elif (jedinec.matica_y + jedinec.matica_x > gen and gen >= jedinec.matica_y):
+        elif (jedinec.matica_y + jedinec.matica_x > gen and gen >= jedinec.matica_y):            # gen je taký , že pohyb jedinca bude smerom dolava
             check = zen_left(jedinec,gen - jedinec.matica_y, jedinec.matica_y-1,jedinec.poradie,0)
-            if (check == False):
+            if (check == False):                                                        # ak daný gén nebol úspešný a jedinec sa zasekol
                 #print("Jedinec to nezvladol")
-                vynuluj_gen(gen,jedinec,jedinec.poradie)
+                vynuluj_gen(gen,jedinec,jedinec.poradie)                            # treba vynulovať jeho posledný gén ktorým vstúpil na záhradku
                 jedinec.set_bad()
                 break
 
-        elif (jedinec.matica_x + 2*(jedinec.matica_y) > gen and gen >= jedinec.matica_x + jedinec.matica_y):
+        elif (jedinec.matica_x + 2*(jedinec.matica_y) > gen and gen >= jedinec.matica_x + jedinec.matica_y):        # gen je taký , že pohyb jedinca bude smerom hore
 
+            # výpočet kde na záhradke sa má jedinec postaviť
             x = (jedinec.matica_x) - 1
             y = abs(gen - 2*(jedinec.matica_y) - jedinec.matica_x + 1)
 
             check = zen_up(jedinec, x ,y,jedinec.poradie,0)
-            if (check == False):
+            if (check == False):                                            # ak daný gén nebol úspešný a jedinec sa zasekol
                 #print("Jedinec to nezvladol")
-                vynuluj_gen(gen,jedinec,jedinec.poradie)
+                vynuluj_gen(gen,jedinec,jedinec.poradie)                    # treba vynulovať jeho posledný gén ktorým vstúpil na záhradku
                 jedinec.set_bad()
                 break
 
-        elif (gen >= jedinec.matica_x + 2*(jedinec.matica_y)):
+        elif (gen >= jedinec.matica_x + 2*(jedinec.matica_y)):              # gen je taký , že pohyb jedinca bude smerom doprava
 
+            # výpočet kde na záhradke sa má jedinec postaviť
             x = abs(gen - 2*(jedinec.matica_y) - 2*(jedinec.matica_x) + 1)
             y = 0
 
             check = zen_right(jedinec,x,y,jedinec.poradie,0)
-            if (check == False):
+            if (check == False):                                            # ak daný gén nebol úspešný a jedinec sa zasekol
                 #print("Jedinec to nezvladol")
-                vynuluj_gen(gen,jedinec,jedinec.poradie)
+                vynuluj_gen(gen,jedinec,jedinec.poradie)                    # treba vynulovať jeho posledný gén ktorým vstúpil na záhradku
                 jedinec.set_bad()
                 break
-        if (check == True):
+        if (check == True):                                                       # ak daný gén prešiel cez záhradku a jedinec sa nezasekol tak zvýš poradie hrabania
             jedinec.up_poradie()
 
 
     #print("SDADAD")
-    #print(jedinec.gen)
+    #print(jedinec.chromozom)
     #print(jedinec.matica)
     #print_matica(jedinec.matica)
     #print(jedinec.fitnes)
@@ -378,19 +378,19 @@ def vynuluj_gen(gen,jedinec,poradie):
 
 
 
-# funkcia ktorá vytvorí náhodný gen pre jedinca
+# funkcia ktorá vytvorí náhodný chromozom pre jedinca
 def create_gens(x,y,k):
     max_gens = (x+y)+k
-    gen=[]
+    chromozom=[]
     choices = list(range((x+y)*2))
     random.shuffle(choices)
-    while len(gen) != max_gens:
-        chromozon = choices.pop()
-        gen.append(chromozon)
-    return gen
+    while len(chromozom) != max_gens:
+        gen = choices.pop()
+        chromozom.append(gen)
+    return chromozom
 
 
-# funkcia vytvorí maticu s kamenmi
+# funkcia vytvorí maticu s kameňmi
 def create_table(buffer,x_velkost, y_velkost):
 
     stone_buffer=[]
@@ -441,9 +441,9 @@ def first_generacia(prazdna_matica,x_velkost,y_velkost,pocet_kamenov):
     matica = copy.deepcopy(prazdna_matica)
     for i in range(POCET_JEDINCOV):
         copy_of_matica = copy.deepcopy(matica)
-        gen = create_gens(x_velkost, y_velkost, pocet_kamenov)
+        chromozom = create_gens(x_velkost, y_velkost, pocet_kamenov)
         jedinec = Jedinec(copy_of_matica)
-        jedinec.set_gen(gen)
+        jedinec.set_chromozom(chromozom)
         jedinec.set_velkost_matice(x_velkost, y_velkost)
         pokus(jedinec)   # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
         jedinec.update_fitness()
@@ -454,7 +454,7 @@ def first_generacia(prazdna_matica,x_velkost,y_velkost,pocet_kamenov):
         if list[i].fitnes == x_velkost * y_velkost - pocet_kamenov:
             #print("Výsledné riešenie je : ")
             #print_matica(list[i].matica)
-            #print(list[i].gen)
+            #print(list[i].chromozom)
             #print("jedinec pochádza z " + str(0) + " generácie")
             return True
 
@@ -477,19 +477,15 @@ def create_mutation_rate_list():
     return new
 
 
-# funkcia zmutuje daný gén
-def mutuj(gen,jedinec):
+# funkcia zmutuje gen v chromozome
+def mutuj(chromozom,jedinec):
     choices = list(range((jedinec.matica_x + jedinec.matica_y) * 2))
-    zmutovany = copy.deepcopy(gen)
+    zmutovany = copy.deepcopy(chromozom)
     mutation_rate = create_mutation_rate_list()
     for i in range(int(len(zmutovany))):
         x = random.choice(mutation_rate)
         if (x == 1):
             mutated = random.choice(choices)
-            if mutated in zmutovany:
-                index = zmutovany.index(mutated)
-                zmutovany[i] = mutated
-                zmutovany[index] = random.choice(choices)
             zmutovany[i] = mutated
     return zmutovany
 
@@ -497,20 +493,20 @@ def mutuj(gen,jedinec):
 
 #funkcia skríži 2 jedincov
 def krizenie(jedinec1,jedinec2):
-    gen1 = jedinec1.gen
-    gen2 = jedinec2.gen
+    chromozom1 = jedinec1.chromozom
+    chromozom2 = jedinec2.chromozom
     i=0
-    newgen = []
-    dlzka = len(gen1)
+    newchromzom = []
+    dlzka = len(chromozom1)
     randomizer = (1,0)
     for i in range(dlzka):
         x = random.choice(randomizer)
         if x==1:
-            newgen.append(gen1[i])
+            newchromzom.append(chromozom1[i])
         elif x==0:
-            newgen.append(gen2[i])
+            newchromzom.append(chromozom2[i])
 
-    return newgen
+    return newchromzom
 
 
 
@@ -533,20 +529,6 @@ def weight(list):
     return new
 
 
-def tournament(list):
-    turnaj = []
-    for i in range(TOURNAMENT_SIZE):
-        jedinec = random.choice(list)
-        turnaj.append(jedinec)
-
-    best_jedinec = turnaj[0]
-    for jedinec in turnaj:
-        if jedinec.fitnes > best_jedinec.fitnes:
-            best_jedinec = jedinec
-
-    return jedinec
-
-
 def elitarstvo(list):
    new=copy.deepcopy(list)
    new.sort(key=lambda x: x.fitnes, reverse=True)
@@ -564,29 +546,29 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
         new_list = copy.deepcopy(list)
 
     generation_new = []
-    all_gens = []
+    all_chromozoms = []
 
     for i in range(POCET_JEDINCOV):
-        novy_gen = []
+        novy_chromozom = []
         if OPTION == 1:             # výber Ruletou (proporciálne)
             parent1 = random.choice(new_list)
             parent2 = random.choice(new_list)
-            while (parent2.gen == parent1.gen):
+            while (parent2.chromozom == parent1.chromozom):
                 parent2 = random.choice(new_list)
             copy_of_matica = copy.deepcopy(matica)
             jedinec = Jedinec(copy_of_matica)
             jedinec.set_velkost_matice(x_velkost, y_velkost)
-            novy_gen = krizenie(parent1, parent2)
-            while novy_gen in all_gens:
-                novy_gen = mutuj(novy_gen, jedinec)
+            novy_chromozom = krizenie(parent1, parent2)
+            while novy_chromozom in all_chromozoms:
+                novy_chromozom = mutuj(novy_chromozom, jedinec)
 
 
-            jedinec.set_gen(novy_gen)
+            jedinec.set_chromozom(novy_chromozom)
 
             pokus(jedinec)  # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
             jedinec.update_fitness()
-            one_gen = copy.deepcopy(novy_gen)
-            all_gens.append(one_gen)
+            one_chromozom = copy.deepcopy(novy_chromozom)
+            all_chromozoms.append(one_chromozom)
             generation_new.append(jedinec)
 
         elif OPTION == 0:
@@ -596,59 +578,32 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
             if i >= pocet_najlepsich:
                 parent1 = random.choice(new_list)
                 parent2 = random.choice(new_list)
-                while (parent2.gen == parent1.gen):
+                while (parent2.chromozom == parent1.chromozom):
                     parent2 = random.choice(new_list)
                 copy_of_matica = copy.deepcopy(matica)
                 jedinec = Jedinec(copy_of_matica)
                 jedinec.set_velkost_matice(x_velkost, y_velkost)
-                novy_gen = krizenie(parent1, parent2)
-                while novy_gen in all_gens:
-                    novy_gen = mutuj(novy_gen, jedinec)
+                novy_chromozom = krizenie(parent1, parent2)
+                while novy_chromozom in all_chromozoms:
+                    novy_chromozom = mutuj(novy_chromozom, jedinec)
 
-                jedinec.set_gen(novy_gen)
+                jedinec.set_chromozom(novy_chromozom)
                 pokus(jedinec)  # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
                 jedinec.update_fitness()
-                one_gen = copy.deepcopy(novy_gen)
-                all_gens.append(one_gen)
+                one_chromozom = copy.deepcopy(novy_chromozom)
+                all_chromozoms.append(one_chromozom)
                 generation_new.append(jedinec)
 
             else:
-                one_gen = copy.deepcopy(new_list[i].gen)
+                one_chromozom = copy.deepcopy(new_list[i].chromozom)
                 generation_new.append(new_list[i])
-                all_gens.append(one_gen)
-
-        elif OPTION ==2:
-            parent1 = tournament(new_list)
-            parent2 = tournament(new_list)
-            while parent2.gen == parent1.gen:
-                parent2 = tournament(new_list)
-            copy_of_matica = copy.deepcopy(matica)
-            jedinec = Jedinec(copy_of_matica)
-            jedinec.set_velkost_matice(x_velkost, y_velkost)
-            novy_gen = krizenie(parent1, parent2)
-            while novy_gen in all_gens:
-                novy_gen = mutuj(novy_gen, jedinec)
-
-            jedinec.set_gen(novy_gen)
-
-            pokus(jedinec)  # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
-            jedinec.update_fitness()
-            one_gen = copy.deepcopy(novy_gen)
-            all_gens.append(one_gen)
-            generation_new.append(jedinec)
-
-
-
-
-
+                all_chromozoms.append(one_chromozom)
 
     return generation_new
 
 
-
-
 # spustenie genetického algoritmu
-def start_algo(matica, x_velkost, y_velkost, pocet_kamenov,OPTION):
+def start_algo(matica, x_velkost, y_velkost, pocet_kamenov,OPTION,moznost):
 
     generation_count = 1
     global BEST
@@ -660,43 +615,78 @@ def start_algo(matica, x_velkost, y_velkost, pocet_kamenov,OPTION):
             for i in range(len(list)):
                 list[i].set_generation(generation_count)
                 if list[i].fitnes == x_velkost * y_velkost - pocet_kamenov:
-                    #nn = copy.deepcopy(list)
-                    #nn.sort(key=lambda x: x.fitnes, reverse=True)
-                    #sum = 0
-                    #for jedinec in nn:
-                        #sum = sum + jedinec.fitnes
-                    #avg = sum / POCET_JEDINCOV
-                    #print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)+ "  AVG:  " + str(avg))
-                    #print("Výsledné riešenie je : ")
-                    #print("")
-                    #print("FITNES: " + str(list[i].fitnes))
-                    #print_matica(list[i].matica)
-                    #print(list[i].gen)
-                    #print("jedinec pochádza z " + str(generation_count) + " generácie")
+                    if (moznost == 1):
+                        nn = copy.deepcopy(list)
+                        nn.sort(key=lambda x: x.fitnes, reverse=True)
+                        sum = 0
+                        for jedinec in nn:
+                            sum = sum + jedinec.fitnes
+                        avg = sum / POCET_JEDINCOV
+                        print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)+ "  AVG:  " + str(avg))
+                        print("Výsledné riešenie je : ")
+                        print("")
+                        print("FITNES: " + str(list[i].fitnes))
+                        print_matica(list[i].matica)
+                        print(list[i].chromozom)
+                        print("jedinec pochádza z " + str(generation_count) + " generácie")
 
                     return generation_count
                 elif (list[i].fitnes > BEST.fitnes):
                     BEST = list[i]
+            if(moznost ==1):
+                nn = copy.deepcopy(list)
+                nn.sort(key=lambda x: x.fitnes, reverse=True)
+                sum = 0
+                for jedinec in nn:
+                    sum = sum+jedinec.fitnes
+                avg=sum/POCET_JEDINCOV
+                print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)  + "  AVG:  " + str(avg))
 
-            #nn = copy.deepcopy(list)
-            #nn.sort(key=lambda x: x.fitnes, reverse=True)
-            #sum = 0
-            #for jedinec in nn:
-               # sum = sum+jedinec.fitnes
-            #avg=sum/POCET_JEDINCOV
-            #print("GENERATION " + str(generation_count) + " MAX fitness : " + str(nn[0].fitnes) + " MIN fitness: " + str(nn[POCET_JEDINCOV-1].fitnes)  + "  AVG:  " + str(avg))
             generation_count = generation_count + 1
 
+        if (moznost == 1):
+            print("\nNajlepšie dosiahnuté riešenie je :")
+            print("")
+            print("FITNES: " + str(BEST.fitnes))
+            print_matica(BEST.matica)
+            print(BEST.chromozom)
 
-       # print("\nNajlepšie dosiahnuté riešenie je :")
-        #print("")
-        #print("FITNES: " + str(BEST.fitnes))
-        #print_matica(BEST.matica)
-       # print(BEST.gen)
-
-       # print("jedinec pochádza z " + str(BEST.generation) + " generácie")
+            print("jedinec pochádza z " + str(BEST.generation) + " generácie")
 
     return 0
+
+
+def tester(opakovanie,OPTION,matica,x_velkost,y_velkost,pocet_kamenov):
+    total_time = 0
+    total_count = 0
+    x = copy.deepcopy(opakovanie)
+    for i in range(opakovanie):
+        t = time.process_time()
+        count = start_algo(matica, x_velkost, y_velkost, pocet_kamenov, OPTION,0)
+        if count == 0:
+            x = x - 1
+
+        else:
+            total_count = total_count + count
+            elapsed_time = time.process_time() - t
+            total_time = total_time + elapsed_time
+
+    if OPTION == 0:
+        print("Výber na základe elity")
+    else:
+        print("Výber na základe rulety")
+
+    print("POCET JEDINCOV= " + str(POCET_JEDINCOV) +"\nPOCET GENERACII= " + str(POCET_GENERACII) + "\nMUTATION_RATE=" + str(MUTATION_RATE) + "%")
+    if OPTION == 0:
+        print("ELITISM= " + str(ELITISM) + "0%")
+
+    total_time = total_time / x
+    total_count = total_count / x
+    print("TOTAL AVG TIME : " + str(total_time))
+    print("TOTAL AVG generation : " + str(total_count))
+    uspesnost = x/opakovanie*100
+    print("Úspešnosť nájdeného riešenia = " + str(uspesnost) + "%")
+    print("")
 
 
 
@@ -707,6 +697,7 @@ def main():
     global TOURNAMENT_SIZE
     global MUTATION_RATE
     global ELITISM
+    global moznost
     buffer = []
     GENERACIA = 1
     vstup = open("vstup.txt", "r")
@@ -717,6 +708,7 @@ def main():
     pocet_kamenov = len(buffer)-2
 
     matica = create_table(buffer,x_velkost,y_velkost)
+    print_matica(matica)
 
     print("###########################################################")
     print("Problém - Zenova záhrada")
@@ -725,17 +717,39 @@ def main():
     print("počet riadkov = 10")
     print("počet stĺpcov = 12")
     print("MENU_1: ")
-    print("")
-    #print("POCET JEDINCOV: ")
-    #POCET_JEDINCOV = int(input())
-    #print("MAXIMALNY POČET GENERÁCIÍ: ")
-    #POCET_GENERACII = int(input())
-    #print("Pravdepodobnosť mutácie génu: (1 = 1%, 100 = 100%")
-    #MUTATION_RATE = int(input())
+    print("0 -> Tester")
+    print("1 -> Program")
+    print("Vaša voľba: ")
+    moznost = int(input())
+
+
+    print("POCET JEDINCOV: ")
+    POCET_JEDINCOV = int(input())
+    print("MAXIMALNY POČET GENERÁCIÍ: ")
+    POCET_GENERACII = int(input())
+    print("Pravdepodobnosť mutácie génu: (1 = 1%, 100 = 100%")
+    MUTATION_RATE = int(input())
+
+    print("MENU_2")
+    print("0 -> Výber jedincov na základe elity (prvých 10%) ostatných 90% sa vytvorí výberom selekciou všetkých jedincov a následným križenim, mutáciou")
+    print("1 -> Výber jedincov na základe rulety")
+    print("Váš výber: ")
+    OPTION = int(input())
+    if OPTION ==0:
+        print("ELITISM mnoŽstvo vyvolených : (1=10% 10=100%)")
+        ELITISM = int(input())
+
+    if (moznost == 0):
+        print("Koľkokrát sa má vykonať test pre zadané hodnoty ? ")
+        opakovanie = int(input())
+        tester(opakovanie,OPTION,matica,x_velkost,y_velkost,pocet_kamenov)
+
+    elif (moznost == 1):
+        start_algo(matica, x_velkost, y_velkost, pocet_kamenov, OPTION,1)
 
 
 
-
+    """
     for k in range(5):
         if k == 0 :
             MUTATION_RATE = 1
@@ -893,7 +907,7 @@ def main():
         print("TOTAL AVG TIME : " + str(total_time))
         print("TOTAL AVG generation : " + str(total_count))
         print(x)
-
+    """
 
 
 
@@ -926,21 +940,11 @@ def main():
     print("OPTION-2")
     print("TOTAL AVG TIME : " + str(total_time))
     print("TOTAL AVG generation : " + str(total_count))
-   
+   """
 
 
-    print("MENU_2")
-    print("0 -> Výber jedincov na základe elity (prvých 10%) ostatných 90% sa vytvorí výberom selekciou všetkých jedincov a následným križenim, mutáciou")
-    print("1 -> Výber jedincov na základe rulety")
-    print("2 -> Výber jedincov na zákade turnaju")
-    print("Váš výber: ")
-    OPTION = int(input())
-    if OPTION == 2:
-        print("Veľkosť turnaju: ")
-        TOURNAMENT_SIZE = int(input())
 
-    start_algo(matica,x_velkost,y_velkost,pocet_kamenov,OPTION)
-    """
+
 
 
 

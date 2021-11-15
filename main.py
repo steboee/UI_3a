@@ -526,6 +526,22 @@ def elitarstvo(list):
    return new
 
 
+def tournament(list):
+    turnaj = []
+    for i in range(TOURNAMENT_SIZE):
+        jedinec = random.choice(list)
+        while jedinec in turnaj:
+            jedinec = random.choice(list)
+        turnaj.append(jedinec)
+
+    best_jedinec = turnaj[0]
+    for jedinec in turnaj:
+        if jedinec.fitnes > best_jedinec.fitnes:
+            best_jedinec = jedinec
+
+    return jedinec
+
+
 # funkcia vytvára novú generáciu
 def new_generation(list,matica, x_velkost, y_velkost,OPTION):
 
@@ -541,7 +557,7 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
 
     for i in range(POCET_JEDINCOV):
         novy_chromozom = []
-        if OPTION == 1:             # výber Ruletou (proporciálne)
+        if (OPTION == 1):             # výber Ruletou (proporciálne)
             parent1 = random.choice(new_list)
             parent2 = random.choice(new_list)
             while (parent2.chromozom == parent1.chromozom):
@@ -562,8 +578,8 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
             all_chromozoms.append(one_chromozom)
             generation_new.append(jedinec)
 
-        elif OPTION == 0:
-            pocet_najlepsich = POCET_JEDINCOV/10 * ELITISM   # do novej generácie sa dostane 10% najlepších (bez zmeny)
+        elif (OPTION == 0):
+            pocet_najlepsich = POCET_JEDINCOV/10 * ELITISM   # do novej generácie sa dostane x% najlepších (bez zmeny)
             if i == pocet_najlepsich:
                 new_list = weight(list)
             if i >= pocet_najlepsich:
@@ -589,6 +605,24 @@ def new_generation(list,matica, x_velkost, y_velkost,OPTION):
                 one_chromozom = copy.deepcopy(new_list[i].chromozom)
                 generation_new.append(new_list[i])
                 all_chromozoms.append(one_chromozom)
+
+        elif (OPTION == 2):
+            parent1 = tournament(new_list)
+            parent2 = tournament(new_list)
+            while (parent1.chromozom == parent2.chromozom):
+                parent2 = tournament(new_list)
+
+            copy_of_matica = copy.deepcopy(matica)
+            jedinec = Jedinec(copy_of_matica)
+            jedinec.set_velkost_matice(x_velkost, y_velkost)
+            novy_chromozom = krizenie(parent1, parent2)
+            novy_gen = mutuj(novy_chromozom, jedinec)
+
+            jedinec.set_chromozom(novy_gen)
+
+            pokus(jedinec)  # vypočíta sa fitness funkcia a priradí sa danému jedincovi ( prebehne hrabanie zahrady)
+            jedinec.update_fitness()
+            generation_new.append(jedinec)
 
     return generation_new
 
@@ -722,14 +756,18 @@ def main():
     MUTATION_RATE = int(input())
 
     print("MENU_2")
-    print("0 -> Výber jedincov na základe elitárstva ")
+    print("0 -> Výber jedincov na základe elitárstva (+ruleta)")
     print("1 -> Výber jedincov na základe rulety")
+    print("2 -> Výber jedincov na základe turnaja")
     print("Váš výber: ")
     OPTION = int(input())
     if OPTION ==0:
         print("ELITISM mnoŽstvo vyvolených : (1 = 10%    10 = 100%)")
         ELITISM = int(input())
 
+    if OPTION == 2:
+        print("TOURNAMENT SIZE : ")
+        TOURNAMENT_SIZE = int(input())
     if (moznost == 0):
         print("Koľkokrát sa má vykonať test pre zadané hodnoty ? ")
         opakovanie = int(input())
